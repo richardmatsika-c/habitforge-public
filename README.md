@@ -7,6 +7,10 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-blue.svg)](https://www.docker.com/)
 
+[![Live API](https://img.shields.io/badge/Live-API-blue?style=for-the-badge)](https://app-6gvb.onrender.com)
+[![Swagger Docs](https://img.shields.io/badge/Docs-Swagger-green?style=for-the-badge)](https://app-6gvb.onrender.com/docs)
+[![Render](https://img.shields.io/badge/Deployed%20on-Render-46E3B7?style=for-the-badge&logo=render)](https://app-6gvb.onrender.com)
+
 ## 🚀 Features
 
 - 🔐 **Secure Authentication**: JWT-based auth with refresh tokens and password hashing.
