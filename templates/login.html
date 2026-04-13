@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Enter the Forge — HabitForge{% endblock %}
+
+{% block content %}
+<main style="background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); padding: 24px; border-radius: 12px; max-width: 480px; margin: 40px auto; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+
+  <h1 style="margin-top:0; font-size:1.5rem; line-height:1.4;">
+    Return to the Forge
+  </h1>
+
+  {% set msg = None %}
+  {% if error == "missing_credentials" %}
+    {% set msg = "Please enter both your username and password." %}
+  {% elif error == "bad_credentials" %}
+    {% set msg = "Hmm… that combination didn’t match. Try again." %}
+  {% elif error == "reset_success" %}
+    {% set msg = "Password updated — welcome back." %}
+  {% endif %}
+
+  {% if msg %}
+    <div style="margin:12px 0;padding:10px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);color:var(--muted);">
+      {{ msg }}
+    </div>
+  {% endif %}
+
+  <form method="post" action="/web/login" novalidate>
+
+    <label for="username" style="display:block;margin-top:16px;color:var(--muted); font-size:0.9rem;">Username</label>
+    <input id="username" name="username" type="text" required
+           placeholder="The name you chose in the forge"
+           style="width:100%;padding:12px;border-radius:10px;margin-top:6px;background:var(--card);color:inherit;border:1px solid rgba(255,255,255,0.05);box-sizing:border-box;">
+
+    <label for="password" style="display:block;margin-top:16px;color:var(--muted); font-size:0.9rem;">Password</label>
+    <input id="password" name="password" type="password" required
+           placeholder="Keep it safe, keep it secret"
+           style="width:100%;padding:12px;border-radius:10px;margin-top:6px;background:var(--card);color:inherit;border:1px solid rgba(255,255,255,0.05);box-sizing:border-box;">
+
+    <div style="margin-top:20px; display:flex; justify-content:flex-end;">
+      <button type="submit" class="btn">Enter the Forge</button>
+    </div>
+  </form>
+</main>
+{% endblock %}

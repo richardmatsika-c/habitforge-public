@@ -1,0 +1,236 @@
+<!-- FILE: templates/index.html -->
+{% extends "base.html" %}
+{% block title %}HabitForge — Rebuild, One Small Ritual at a Time{% endblock %}
+
+{% block head_styles %}
+<style>
+  /* calmer hero layout tuned for approachability */
+  .hero-section {
+    min-height: 72vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:2rem 0;
+  }
+
+  .hero-card {
+    background: linear-gradient(135deg,
+      rgba(255,255,255,0.01) 0%,
+      rgba(255,122,75,0.02) 50%,
+      rgba(255,255,255,0.006) 100%);
+    padding: 2.25rem 1.5rem;
+    border-radius: 16px;
+    max-width: 840px;
+    margin:0 auto;
+    text-align:left;
+    border: 1px solid rgba(255,255,255,0.03);
+    box-shadow: 0 14px 30px rgba(2,6,10,0.6);
+    position:relative;
+    overflow:hidden;
+  }
+
+  /* very subtle top line accent */
+  .hero-card::before {
+    content: '';
+    position:absolute;
+    left:0; right:0; top:0;
+    height:1px;
+    background: linear-gradient(90deg, transparent, rgba(255,122,75,0.08), transparent);
+    opacity:0.9;
+  }
+
+  .hero-title {
+    font-size:2.1rem;
+    font-weight:700;
+    line-height:1.15;
+    margin:0 0 0.75rem 0;
+    color: var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .hero-subtitle {
+    font-size:1.05rem;
+    color: var(--muted);
+    line-height:1.5;
+    margin:0 0 1.25rem 0;
+    max-width:52rem;
+  }
+
+  .manifesto-text {
+    margin:1.25rem 0 1.75rem 0;
+    padding: 1rem;
+    background: rgba(255,255,255,0.01);
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.02);
+  }
+
+  .manifesto-quote {
+    font-size:1rem;
+    line-height:1.6;
+    color: var(--text);
+    margin:0;
+  }
+
+  .journey-steps {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap:1rem;
+    margin:1.75rem 0;
+  }
+
+  .step {
+    padding:1rem;
+    background: rgba(255,255,255,0.007);
+    border-radius:12px;
+    border: 1px solid rgba(255,255,255,0.02);
+    text-align:left;
+  }
+
+  .step-number {
+    width:36px; height:36px; border-radius:50%;
+    background: linear-gradient(135deg, rgba(255,122,75,0.95), rgba(255,176,122,0.9));
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; color: var(--bg-900); margin-bottom:0.75rem;
+  }
+
+  .step-title { font-size:1.02rem; font-weight:700; margin:0 0 0.4rem 0; color:var(--text) }
+  .step-description { margin:0; color:var(--muted); font-size:0.95rem; line-height:1.45 }
+
+  .cta-section { margin-top:1.5rem; display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; }
+
+  .btn-hero {
+    background: linear-gradient(135deg, var(--ember-1), var(--ember-2));
+    color: var(--bg-900);
+    font-weight:700;
+    padding:0.9rem 1.6rem;
+    border-radius:12px;
+    text-decoration:none;
+    display:inline-flex; align-items:center; gap:0.5rem;
+    font-size:1rem; border:none; cursor:pointer;
+    box-shadow: 0 10px 26px rgba(255,122,75,0.18);
+  }
+  .btn-hero:focus { outline: 3px solid rgba(255,127,80,0.12); outline-offset: 2px; }
+  .btn-hero:hover { transform: translateY(-2px); }
+
+  .btn-secondary {
+    background:transparent; color:var(--text);
+    border:1px solid rgba(255,255,255,0.06);
+    font-weight:600; padding:0.9rem 1.4rem; border-radius:12px; text-decoration:none;
+  }
+  .btn-secondary:hover { border-color: rgba(255,122,75,0.16); color: var(--ember-1); }
+
+  .forge-states { display:flex; gap:0.75rem; margin-top:1.25rem; flex-wrap:wrap; }
+  .state-pill {
+    padding:0.45rem 0.9rem; border-radius:999px; font-weight:700; font-size:0.9rem;
+    background: rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.02); color:var(--muted);
+  }
+  .state-pill.ember { color: var(--ember-1); border-color: rgba(255,122,75,0.18) }
+  .state-pill.flame { color: var(--ember-2); border-color: rgba(255,176,122,0.14) }
+  .state-pill.steel { color: var(--steel-1); border-color: rgba(109,211,181,0.12) }
+
+  /* Responsive tweaks */
+  @media (max-width:768px) {
+    .hero-card { padding:1.5rem; border-radius:12px; }
+    .hero-title { font-size:1.6rem; }
+    .hero-subtitle { font-size:1rem }
+    .journey-steps { grid-template-columns: 1fr; }
+    .cta-section { flex-direction:column; align-items:stretch; }
+    .btn-secondary { width:100%; text-align:center; }
+  }
+
+  /* Respect prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    .hero-card, .btn-hero { transition: none !important; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+  <div class="hero-card" role="region" aria-labelledby="hero-title">
+    <!-- Headline -->
+    <h1 id="hero-title" class="hero-title">
+      The Forge
+    </h1>
+
+    <p class="hero-subtitle">
+      This is a quiet place to try one small thing. No loud promises — just steady steps, one ritual at a time.
+    </p>
+
+    <!-- Short manifesto -->
+    <div class="manifesto-text" aria-hidden="false">
+      <p class="manifesto-quote">
+        HabitForge is for people who want to reclaim small pieces of life — not to become perfect, but to remember what steady feels like.
+      </p>
+    </div>
+
+    <!-- The 7-Day Journey (short) -->
+    <div class="journey-steps" aria-hidden="false">
+      <div class="step">
+        <div class="step-number">1</div>
+        <h4 class="step-title">The Honest Note</h4>
+        <p class="step-description">Write one unfiltered truth. Not to fix it — to notice it.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-number">2</div>
+        <h4 class="step-title">The Ember</h4>
+        <p class="step-description">Choose a tiny act that reminds you you’re alive.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-number">3</div>
+        <h4 class="step-title">The Flame</h4>
+        <p class="step-description">Practice the act for a few days. Let small wins add up.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-number">4</div>
+        <h4 class="step-title">The Steel</h4>
+        <p class="step-description">Reflection and continuity — a quieter kind of change.</p>
+      </div>
+    </div>
+
+    <!-- Forge states (visual hint only) -->
+    <div class="forge-states" aria-hidden="true">
+      <div class="state-pill ash">Ash</div>
+      <div class="state-pill ember">Ember</div>
+      <div class="state-pill flame">Flame</div>
+      <div class="state-pill steel">Steel</div>
+    </div>
+
+    <!-- CTAs -->
+    <div class="cta-section" role="group" aria-label="Primary actions">
+      <a href="/web/register" class="btn-hero" aria-label="Begin your journey">Begin Your Journey</a>
+      <a href="/web/login" class="btn-secondary" aria-label="Log in">Already forging? Enter here</a>
+    </div>
+
+    <!-- Closing note -->
+    <div style="margin-top:1.75rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.03);">
+      <p style="color:var(--muted); font-size:0.92rem; margin:0; line-height:1.5;">
+        HabitForge is a witness, not a warden. We focus on rituals, not perfection. Your story is yours — and small actions matter.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Gentle entrance animation (single shot). Respects reduced motion.
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const card = document.querySelector('.hero-card');
+    if (!card) return;
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(8px)';
+    card.style.transition = 'opacity 420ms ease, transform 420ms ease';
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+      }, 80);
+    });
+  });
+</script>
+{% endblock %}

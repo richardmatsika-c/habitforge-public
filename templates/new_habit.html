@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}New Ritual — HabitForge{% endblock %}
+
+{% block content %}
+<main style="background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent); padding: 24px; border-radius: 12px; max-width: 480px; margin: 40px auto; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+
+  <h1 style="margin-top:0; font-size:1.5rem; line-height:1.4;">
+    Forge a New Ritual
+  </h1>
+
+  {% if error %}
+    <div style="margin:12px 0;padding:10px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);color:var(--muted);">
+      {{ error }}
+    </div>
+  {% endif %}
+
+  <p style="color:var(--muted); font-size:0.9rem; margin-top:0;">
+    Each ritual is a tiny spark that builds your inner forge. Start with something simple—something you can honor today.
+  </p>
+
+  <form method="post" action="/web/habits/new" novalidate>
+
+    <label for="name" style="display:block;margin-top:16px;color:var(--muted); font-size:0.9rem;">Ritual Name</label>
+    <input id="name" name="name" type="text" required
+           placeholder="{% set examples = ['Sit quietly with a cup of tea','Write one line of gratitude','Take a 5-minute walk'] %}{{ examples | random }}"
+           style="width:100%;padding:12px;border-radius:10px;margin-top:6px;background:var(--card);color:inherit;border:1px solid rgba(255,255,255,0.05);box-sizing:border-box;">
+
+    <label for="frequency" style="display:block;margin-top:16px;color:var(--muted); font-size:0.9rem;">How Often</label>
+    <select id="frequency" name="frequency"
+            style="width:100%;padding:12px;border-radius:10px;margin-top:6px;background:var(--card);color:inherit;border:1px solid rgba(255,255,255,0.05);box-sizing:border-box;">
+      <option value="daily">Daily — keep the fire burning</option>
+      <option value="weekly">Weekly — a steady ember</option>
+      <option value="monthly">Monthly — a long-term spark</option>
+    </select>
+
+    <p style="margin-top:10px; font-size:0.8rem; color:var(--muted);">
+      Tip: Start with something you can consistently honor. Momentum comes from repetition, not intensity.
+    </p>
+
+    <div style="margin-top:20px; display:flex; justify-content:flex-end;">
+      <button type="submit" class="btn">Set Ritual</button>
+    </div>
+  </form>
+</main>
+{% endblock %}

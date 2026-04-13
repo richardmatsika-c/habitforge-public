@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}The Forge — Day {{ current_day }}{% endblock %}
+
+{% block head_styles %}
+<style>
+  .forge-wrap { display:grid; gap:18px; grid-template-columns: 1fr 320px; }
+  @media (max-width:900px) { .forge-wrap { grid-template-columns: 1fr; } }
+
+  .narrative-card { padding:16px; }
+  .narrative-card h2 { margin:0 0 4px 0; font-size:1.05rem; }
+  .narrative-card p { margin:8px 0; line-height:1.4; color:var(--muted); }
+
+  .ritual-card { display:flex; flex-direction:column; gap:12px; padding:16px; }
+  .ritual-cta { display:flex; gap:12px; align-items:center; justify-content:space-between; }
+  .ritual-cta .desc { color:var(--muted); font-size:0.95rem; }
+  .ritual-item { display:flex; gap:12px; align-items:center; padding:12px; border-radius:12px; background:var(--card); border:1px solid rgba(255,255,255,0.02); }
+  .ritual-item .toggle { width:48px;height:48px;display:grid;place-items:center;border-radius:10px;border:1px solid rgba(255,255,255,0.02); background:transparent; cursor:pointer; }
+  .ritual-item .toggle[aria-pressed="true"] { background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#041226; }
+
+  .placeholder-centered { text-align:center; color:var(--muted); font-style:italic; padding:16px; border-radius:10px; background:rgba(255,255,255,0.01); }
+
+  /* Side notes */
+  .side-steps { display:flex; flex-direction:column; gap:12px; }
+  .step { padding:10px; border-radius:10px; background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent); border:1px solid rgba(255,255,255,0.02); }
+  .step .title { font-weight:700; margin-bottom:6px; }
+  .small-muted { color:var(--muted); font-size:0.9rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="forge-wrap">
+  <!-- Main column -->
+  <div class="card ritual-card" role="main" aria-labelledby="forge-heading">
+    <header class="narrative-card" id="forge-heading">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:1.6rem">🔥</div>
+        <div>
+          <h2>The Seven-Day Forge — Day {{ current_day }}</h2>
+          <div class="small-muted">A guided path — small rituals that build consistent growth.</div>
+        </div>
+      </div>
+    </header>
+
+    <section aria-label="Narrative">
+      {% if current_day == 0 %}
+        <h3 style="margin:0">The Honest Note</h3>
+        <p class="small-muted">Start by capturing one thought or goal that matters to you today. No pressure — clarity is progress.</p>
+      {% elif current_day == 1 %}
+        <h3 style="margin:0">The Ember</h3>
+        <p class="small-muted">Pick one small action to move forward. This is your spark — simple, repeatable, and meaningful.</p>
+      {% elif current_day == 2 %}
+        <h3 style="margin:0">The Flame</h3>
+        <p class="small-muted">Build momentum. Today’s ritual is a tiny, intentional act that reinforces your routine.</p>
+      {% else %}
+        <h3 style="margin:0">Tend the Fire</h3>
+        <p class="small-muted">Keep your ritual small but consistent. Each repetition strengthens your habit and confidence.</p>
+      {% endif %}
+    </section>
+
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0">
+
+    <!-- Ritual block: single focus -->
+    <section aria-label="Today's ritual">
+      {% if ritual %}
+        <div class="ritual-item" id="habit-{{ ritual.id }}">
+          <button class="toggle" data-habit-id="{{ ritual.id }}" aria-pressed="{{ 'true' if ritual.completed_today else 'false' }}" title="Toggle ritual complete">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+              {% if ritual.completed_today %}
+              <path d="M7.5 12.2l2.2 2.1L16.5 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              {% endif %}
+            </svg>
+          </button>
+
+          <div style="flex:1">
+            <div style="font-weight:700">{{ ritual.name }}</div>
+            <div class="small-muted" style="margin-top:6px;">{{ ritual.prompt or 'A simple act to build consistency and focus.' }}</div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+            <div class="small-muted">Streak: <strong id="streak-{{ ritual.id }}">{{ ritual.streak }}</strong></div>
+            <div>
+              <a href="/web/habits/{{ ritual.id }}/edit" class="ghost" style="text-decoration:underline;padding:6px">Edit</a>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:10px;display:flex;gap:10px;align-items:center">
+          <form method="post" action="/web/ritual/{{ ritual.id }}/note" style="flex:1">
+            <label for="note" class="sr-only">Write a quick reflection</label>
+            <input id="note" name="note" placeholder="Write a short reflection about today's ritual…" style="width:100%;padding:10px;border-radius:10px;background:var(--card);border:1px solid rgba(255,255,255,0.02);color:inherit" />
+          </form>
+          <button id="save-note" class="btn small" style="white-space:nowrap">Save</button>
+        </div>
+
+      {% else %}
+        <div class="placeholder-centered">Today's ritual is complete. Come back tomorrow to continue building momentum.</div>
+      {% endif %}
+    </section>
+  </div>
+
+  <!-- Side column -->
+  <aside class="card side-steps" role="complementary" aria-label="Forge guidance">
+    <div class="step">
+      <div class="title">Today's focus</div>
+      <div class="small-muted">{{ today_intention or "Focus on one small, meaningful action." }}</div>
+    </div>
+
+    <div class="step">
+      <div class="title">Handling setbacks</div>
+      <div class="small-muted">If you miss a ritual, return with a small action. Growth is a steady process, not perfection.</div>
+    </div>
+
+    <div class="step">
+      <div class="title">Ritual ideas</div>
+      <div class="small-muted">Try: walk for 5 minutes • drink a glass of water • breathe deeply • jot one insight.</div>
+    </div>
+
+    <div style="margin-top:auto">
+      <a href="/web/habits/new" class="btn" style="width:100%;justify-content:center">Add a Ritual</a>
+    </div>
+  </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  // Toggle completion for the day's ritual (optimistic UI)
+  const container = document.querySelector('.ritual-card');
+  if (!container) return;
+
+  container.addEventListener('click', async (ev) => {
+    const btn = ev.target.closest('button.toggle');
+    if (!btn) return;
+    const id = btn.dataset.habitId;
+    if (!id) return;
+
+    const prev = btn.getAttribute('aria-pressed') === 'true';
+    btn.setAttribute('aria-pressed', String(!prev));
+    try {
+      const res = await fetch(`/api/habits/${id}/toggle`, { method: 'POST', headers: { 'Accept':'application/json' } });
+      if (!res.ok) throw new Error('Server error');
+      const data = await res.json();
+      const streakEl = document.getElementById(`streak-${id}`);
+      if (streakEl && data.streak !== undefined) streakEl.textContent = data.streak;
+      btn.setAttribute('aria-pressed', String(Boolean(data.completed_today)));
+    } catch (err) {
+      console.error('Toggle failed', err);
+      window.location.reload();
+    }
+  });
+
+  const saveBtn = document.getElementById('save-note');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async () => {
+      const input = document.getElementById('note');
+      if (!input) return;
+      const text = input.value && input.value.trim();
+      if (!text) { input.focus(); return; }
+
+      try {
+        const id = document.querySelector('button.toggle')?.dataset.habitId;
+        if (!id) return;
+        const resp = await fetch(`/api/habits/${id}/note`, {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json', 'Accept':'application/json' },
+          body: JSON.stringify({ text })
+        });
+        if (!resp.ok) throw new Error('Network error');
+        saveBtn.textContent = 'Saved';
+        setTimeout(() => saveBtn.textContent = 'Save', 1400);
+        input.value = '';
+      } catch (err) {
+        console.error('Note save failed', err);
+        alert('Could not save your note. Try again.');
+      }
+    });
+  }
+})();
+</script>
+{% endblock %}

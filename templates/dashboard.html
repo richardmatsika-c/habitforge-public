@@ -1,0 +1,391 @@
+{% extends "base.html" %}
+{% block title %}Your Forge — HabitForge{% endblock %}
+
+{% block head_styles %}
+<style>
+  /* Tabs */
+  .tab-nav { display:flex; gap:10px; margin-bottom:18px; border-bottom:1px solid rgba(255,255,255,0.03); padding-bottom:8px; }
+  .tab-nav [role="tab"] { background: transparent; border: none; padding:10px 14px; border-radius: 8px 8px 0 0; color: var(--muted); font-weight:700; cursor:pointer; font-size:0.95rem; position:relative; }
+  .tab-nav [role="tab"][aria-selected="true"] { color: var(--text); background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-bottom: 2px solid var(--ember-1, var(--accent-color)); }
+  .tab-nav [role="tab"][aria-disabled="true"] { color: rgba(154,161,179,0.45); cursor: not-allowed; text-decoration: line-through; opacity: 0.7; }
+  .tab-nav [role="tab"]::after { content: attr(data-tooltip); position:absolute; bottom:-20px; left:50%; transform:translateX(-50%); font-size:0.75rem; color:var(--muted); white-space:nowrap; opacity:0; pointer-events:none; transition:opacity 180ms ease; }
+  .tab-nav [role="tab"]:hover::after { opacity:1; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Layout */
+  .dashboard-grid { display:grid; gap:18px; grid-template-columns: 1fr 320px; align-items:start; }
+  @media (max-width:900px) { .dashboard-grid { grid-template-columns: 1fr; } .sanctuary { order:-1; } }
+
+  /* Main panel */
+  .panel { display:flex; flex-direction:column; gap:16px; }
+
+  /* Narrative / ritual */
+  .narrative-card { padding:14px; }
+  .narrative-card h2 { margin:0; font-size:1.05rem; }
+  .narrative-card p { margin:8px 0 0 0; color:var(--muted); line-height:1.4; }
+
+  .ritual-list { display:flex; flex-direction:column; gap:10px; margin-top:6px; padding:0; list-style:none; }
+  .habit { display:flex; align-items:center; gap:12px; padding:12px; border-radius:12px; background:var(--card); border:1px solid rgba(255,255,255,0.02); transition: all 240ms ease; }
+  .toggle-btn { width:46px; height:46px; min-width:46px; display:grid; place-items:center; border-radius:10px; background: transparent; border:1px solid rgba(255,255,255,0.03); cursor:pointer; }
+  .toggle-btn .check { display: none; }
+  .toggle-btn[aria-pressed="true"] { background: linear-gradient(90deg,var(--ember-1),var(--ember-2)); color: #041226; }
+  .toggle-btn[aria-pressed="true"] .check { display: block; }
+  .habit .name { font-weight:700; }
+  .habit .meta { color:var(--muted); font-size:0.9rem; margin-top:4px; }
+  .delete-btn { background:none; border:none; color:var(--muted); text-decoration:underline; cursor:pointer; padding: 4px; }
+
+  /* Placeholder */
+  .placeholder { text-align:center; color:var(--muted); font-style:italic; padding:12px; border-radius:10px; background:rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.02); }
+
+  /* Sanctuary sidebar */
+  .sanctuary .card-inner { display:flex; flex-direction:column; gap:12px; }
+  .stat { padding:10px; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.015), transparent); display:flex; justify-content:space-between; align-items:center; }
+  .progress-bar { height:10px; background: rgba(255,255,255,0.03); border-radius:8px; overflow:hidden; }
+  .progress-bar > i { display:block; height:100%; width:0%; background: linear-gradient(90deg,var(--ember-1),var(--ember-2)); transition: width 420ms ease; }
+  .recent-notes { display:flex; flex-direction:column; gap:8px; }
+  .note { padding:8px; border-radius:8px; background:rgba(255,255,255,0.01); border:1px solid rgba(255,255,255,0.02); color:var(--muted); font-size:0.95rem; }
+  .note-date { font-size: 0.8rem; margin-bottom: 6px; color: rgba(154,161,179,0.5); }
+
+  /* Small utilities */
+  .section-title { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .section-title h3 { margin:0; font-size:1rem; }
+  .small-muted { color:var(--muted); font-size:0.9rem; }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  .removing { opacity:0; transform:translateX(14px) scale(0.99); transition: all 220ms ease; }
+
+  /* Celebrations */
+  .celebrate { animation: pop 300ms ease; }
+  @keyframes pop { 0% { transform: scale(0.9); opacity:0; } 50% { transform: scale(1.05); opacity:1; } 100% { transform: scale(1); } }
+</style>
+{% endblock %}
+
+{% block content %}
+{% set phase_order = {'ash':0,'ember':1,'flame':2,'steel':3} %}
+{% set current_state = forge_state or 'ash' %}
+{% set current_idx = phase_order[current_state] %}
+
+<nav class="tab-nav" role="tablist" aria-label="Forge phases">
+  <button role="tab" aria-selected="{{ 'true' if current_state == 'ash' else 'false' }}" aria-controls="panel-ash" data-tab="ash" data-tooltip="Start your journey with today's ritual"
+          {% if phase_order['ash'] > current_idx %}aria-disabled="true"{% endif %}>The Forge</button>
+  <button role="tab" aria-selected="{{ 'true' if current_state == 'ember' else 'false' }}" aria-controls="panel-ember" data-tab="ember" data-tooltip="Collect small wins to build momentum"
+          {% if phase_order['ember'] > current_idx %}aria-disabled="true"{% endif %}>Ember</button>
+  <button role="tab" aria-selected="{{ 'true' if current_state == 'flame' else 'false' }}" aria-controls="panel-flame" data-tab="flame" data-tooltip="Turn sparks into steady routines"
+          {% if phase_order['flame'] > current_idx %}aria-disabled="true"{% endif %}>Flame</button>
+  <button role="tab" aria-selected="{{ 'true' if current_state == 'steel' else 'false' }}" aria-controls="panel-steel" data-tab="steel" data-tooltip="Track your progress and streaks"
+          {% if phase_order['steel'] > current_idx %}aria-disabled="true"{% endif %}>Steel</button>
+</nav>
+
+<div class="dashboard-grid">
+  <div class="panel">
+    <!-- ASH / FORGE PANEL -->
+    <section id="panel-ash" role="tabpanel" class="tab-content {% if current_state == 'ash' %}active{% endif %}" aria-hidden="{{ 'false' if current_state == 'ash' else 'true' }}">
+      <div class="card narrative-card" aria-labelledby="forge-heading">
+        <div style="display:flex;gap:12px;align-items:center">
+          <div style="font-size:1.6rem">🔥</div>
+          <div>
+            <h2 id="forge-heading">The Seven-Day Forge — Day {{ forge_progress or 0 }}</h2>
+            <div class="small-muted">A guided path — one tiny ritual at a time.</div>
+          </div>
+        </div>
+
+        <section style="margin-top:12px">
+          {% if forge_progress|int == 0 %}
+            <h3 style="margin:0">Your Starting Note</h3>
+            <p class="small-muted">
+              Begin today: pick one goal, insight, or small action to focus on. No pressure — just a clear first step.
+            </p>
+          {% elif forge_progress|int == 1 %}
+            <h3 style="margin:0">The Ember</h3>
+            <p class="small-muted">
+              You showed up — that’s the first win. A small action today keeps your spark alive.
+            </p>
+          {% else %}
+            <h3 style="margin:0">Tend the Fire</h3>
+            <p class="small-muted">
+              Keep rituals simple, stay consistent, and build momentum. That’s the work of the forge.
+            </p>
+          {% endif %}
+        </section>
+
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:14px 0">
+
+        <section aria-label="Today's ritual">
+          <ul class="ritual-list" id="journey-list">
+            {% if current_ritual %}
+              <li class="habit" id="habit-{{ current_ritual.id }}">
+                <button class="toggle-btn" data-habit-id="{{ current_ritual.id }}" aria-pressed="{{ 'true' if current_ritual.completed_today else 'false' }}" title="Toggle completion">
+                  <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle class="no-check" cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"></circle>
+                    <path class="check" d="M7.5 12.2l2.2 2.1L16.5 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+
+                <div style="flex:1">
+                  <div class="name">{{ current_ritual.name }}</div>
+                  <div class="meta">{{ current_ritual.frequency | default('daily') }}</div>
+                </div>
+              </li>
+
+              {% if forge_progress|int == 0 %}
+                <li style="margin-top:10px">
+                  <form id="note-form" method="post" action="/api/habits/{{ current_ritual.id }}/note">
+                    <label for="note" class="sr-only">Write your Starting Note</label>
+                    <input id="note-text" name="text" placeholder="Write a quick thought or insight for today..." style="width:100%;padding:10px;border-radius:10px;background:var(--card);border:1px solid rgba(255,255,255,0.02);color:inherit" />
+                    <div style="margin-top:8px;display:flex;justify-content:flex-end">
+                      <button type="submit" class="btn small">Save Note</button>
+                    </div>
+                  </form>
+                </li>
+              {% endif %}
+            {% else %}
+              <li class="placeholder">🎉 All set for today! Return tomorrow to continue building your routine.</li>
+            {% endif %}
+          </ul>
+        </section>
+      </div>
+    </section>
+
+    <!-- EMBER / FLAME / STEEL updated with micro-copy in placeholders -->
+    <section id="panel-ember" role="tabpanel" class="tab-content {% if current_state == 'ember' %}active{% endif %}" aria-hidden="{{ 'false' if current_state == 'ember' else 'true' }}">
+      <div class="card">
+        <div class="section-title">
+          <h3>Ember — Small Wins</h3>
+          <div class="small-muted">Tend the spark</div>
+        </div>
+        <div style="margin-top:12px" class="small-muted">
+          Here you’ll track small rituals that restore energy and momentum. Complete at least one to unlock the next phase.
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-flame" role="tabpanel" class="tab-content {% if current_state == 'flame' %}active{% endif %}" aria-hidden="{{ 'false' if current_state == 'flame' else 'true' }}">
+      <div class="card">
+        <div class="section-title">
+          <h3>Flame — Rhythm</h3>
+          <div class="small-muted">Build reliable patterns</div>
+        </div>
+        <div style="margin-top:12px" class="small-muted">
+          You’ll see scaffolds for routines and reflections as you gain momentum. Stay consistent to make it habitual.
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-steel" role="tabpanel" class="tab-content {% if current_state == 'steel' %}active{% endif %}" aria-hidden="{{ 'false' if current_state == 'steel' else 'true' }}">
+      <div class="card">
+        <div class="section-title">
+          <h3>Your Rituals</h3>
+          <div class="small-muted">Your active practices</div>
+        </div>
+
+        <div style="margin-top:10px">
+          <ul class="ritual-list" id="pending-list">
+            {% for item in pending_habits %}
+              {% set h = item.habit %}
+              <li class="habit" id="habit-{{ h.id }}">
+                <button class="toggle-btn" data-habit-id="{{ h.id }}" aria-pressed="false" title="Mark complete">
+                  <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle class="no-check" cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/></svg>
+                    <path class="check" d="M7.5 12.2l2.2 2.1L16.5 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </button>
+                <div style="flex:1">
+                  <div class="name">{{ h.name }}</div>
+                  <div class="meta">{{ h.frequency | default('daily') }} • <span id="streak-{{ h.id }}">{{ item.streak }}</span> day streak</div>
+                </div>
+                <div>
+                  <button class="delete-btn" data-habit-id="{{ h.id }}">Delete</button>
+                </div>
+              </li>
+            {% else %}
+              {% if completed_habits|length == 0 %}
+              <li class="placeholder">No active rituals. Create one to begin.</li>
+              {% endif %}
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="section-title">
+          <h3>Completed Today</h3>
+        </div>
+        <div style="margin-top:10px">
+          <ul class="ritual-list" id="completed-list">
+            {% for item in completed_habits %}
+              {% set h = item.habit %}
+              <li class="habit celebrate" id="habit-{{ h.id }}">
+                <button class="toggle-btn" data-habit-id="{{ h.id }}" aria-pressed="true" title="Mark incomplete">
+                  <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+                    <path class="check" d="M7.5 12.2l2.2 2.1L16.5 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <div style="flex:1">
+                  <div class="name">{{ h.name }}</div>
+                  <div class="meta">{{ h.frequency | default('daily') }} • <span id="streak-{{ h.id }}">{{ item.streak }}</span> day streak</div>
+                </div>
+                <div>
+                  <button class="delete-btn" data-habit-id="{{ h.id }}">Delete</button>
+                </div>
+              </li>
+            {% else %}
+              <li class="placeholder">No rituals completed yet.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<!-- SANCTUARY SIDEBAR -->
+  <aside class="card sanctuary" role="complementary" aria-label="Sanctuary">
+    <div class="card-inner">
+      <div>
+        <div class="small-muted">Current Phase</div>
+        <div class="stat" aria-hidden="true">
+          <div style="font-weight:700">{{ current_state | capitalize }}</div>
+          <div class="small-muted">Where you are in the craft. Complete rituals to advance!</div>
+        </div>
+
+        <div style="margin-top:8px">
+          <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ progress_percent | default(0) }}">
+            <i id="progress-fill" data-progress="{{ progress_percent | default(0) }}"></i>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="small-muted">Actions held today</div>
+        <div class="stat">
+          <div id="completed-count" style="font-weight:700">{{ completed_today_count | default(0) }}</div>
+          <div class="small-muted">acts completed</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="small-muted">Recent Notes</div>
+        <div class="recent-notes">
+          {% for note in log_entries %}
+            <div class="note">
+              <div class="note-date">{{ note.created_at.strftime('%Y-%m-%d') }}</div>
+              <div>{{ note.content | truncate(120) }}</div>
+            </div>
+          {% else %}
+            <div class="placeholder">No notes yet. Add your first reflection!</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div>
+        <a href="/web/habits/new" class="btn" style="width:100%;justify-content:center">Add a Ritual</a>
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  // --- TABBING SCRIPT ---
+  const tabNav = document.querySelector('.tab-nav');
+  if (tabNav) {
+    const tabs = Array.from(tabNav.querySelectorAll('[role="tab"]'));
+    const panels = Array.from(document.querySelectorAll('[role="tabpanel"]'));
+
+    function activateTab(tab) {
+      if (!tab || tab.getAttribute('aria-disabled') === 'true') return;
+      const target = tab.dataset.tab;
+      
+      tabs.forEach(t => t.setAttribute('aria-selected', String(t === tab)));
+      panels.forEach(p => {
+        const isActive = p.id === 'panel-' + target;
+        p.classList.toggle('active', isActive);
+        p.setAttribute('aria-hidden', String(!isActive));
+      });
+      
+      if (history && history.replaceState) {
+        history.replaceState(null, '', '#' + target);
+      } else { location.hash = target; }
+    }
+
+    tabs.forEach(tab => tab.addEventListener('click', (ev) => { ev.preventDefault(); activateTab(tab); }));
+    const hash = (location.hash || '').replace('#','');
+    const initial = tabs.find(t => t.dataset.tab === hash && t.getAttribute('aria-disabled') !== 'true');
+    if (initial) activateTab(initial);
+  }
+
+  // --- PROGRESS BAR ANIMATION ---
+  window.requestAnimationFrame(() => {
+    const pf = document.getElementById('progress-fill');
+    if (pf) { const progress = pf.dataset.progress || '0'; pf.style.width = '0%'; setTimeout(() => { pf.style.width = progress + '%'; }, 60); }
+  });
+
+  // --- MAIN INTERACTION SCRIPT ---
+  const dashboard = document.querySelector('.dashboard-grid');
+  if (dashboard) {
+    const pendingList = document.getElementById('pending-list');
+    const completedList = document.getElementById('completed-list');
+    const completedCountEl = document.getElementById('completed-count');
+
+    dashboard.addEventListener('click', async (ev) => {
+      const button = ev.target.closest('button'); if (!button) return;
+      const habitId = button.dataset.habitId;
+      const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json' };
+
+      if (button.classList.contains('toggle-btn')) {
+        if (!habitId) return;
+        const habitEl = document.getElementById(`habit-${habitId}`);
+        const pressed = button.getAttribute('aria-pressed') === 'true';
+        button.setAttribute('aria-pressed', String(!pressed));
+        if (!pressed && completedList) completedList.prepend(habitEl);
+        else if (pressed && pendingList) pendingList.prepend(habitEl);
+
+        try {
+          const res = await fetch(`/api/habits/${habitId}/toggle`, { method:'POST', headers: headers });
+          if (!res.ok) throw new Error('Network error');
+          const data = await res.json();
+          if (completedCountEl) completedCountEl.textContent = data.completed_today_count;
+          const streakEl = document.getElementById(`streak-${habitId}`);
+          if (streakEl) streakEl.textContent = `${data.streak} day streak`;
+          button.setAttribute('aria-pressed', String(Boolean(data.completed_today)));
+          if (data.action === "done" && data.graduated_to_steel) window.location.reload();
+        } catch (err) { console.error('Toggle failed', err); window.location.reload(); }
+      }
+
+      if (button.classList.contains('delete-btn')) {
+        if (!habitId) return;
+        if (!confirm('Delete this ritual? This cannot be undone.')) return;
+        const habitEl = document.getElementById(`habit-${habitId}`);
+        try {
+          const res = await fetch(`/api/habits/${habitId}/delete`, { method:'POST', headers: headers });
+          if (!res.ok) throw new Error('Network error');
+          if (habitEl) { habitEl.classList.add('removing'); setTimeout(() => habitEl.remove(), 240); }
+        } catch (err) { console.error('Delete failed', err); alert('Could not delete the ritual.'); }
+      }
+    });
+  }
+
+  // --- STARTING NOTE FORM ---
+  const noteForm = document.getElementById('note-form');
+  if(noteForm) {
+    noteForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('note-text');
+      const text = input.value.trim();
+      if (!text) return;
+      const actionUrl = noteForm.getAttribute('action');
+      const button = noteForm.querySelector('button');
+      button.disabled = true; button.textContent = "Saving...";
+      try {
+        const response = await fetch(actionUrl, {
+          method: 'POST', headers: { 'Content-Type':'application/json', 'Accept':'application/json' }, body: JSON.stringify({ text: text })
+        });
+        if (!response.ok) throw new Error('Server error');
+        window.location.reload();
+      } catch (err) { console.error('Failed to save note:', err); button.disabled = false; button.textContent = "Save Note"; }
+    });
+  }
+})();
+</script>
+{% endblock %}

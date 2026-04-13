@@ -1,0 +1,53 @@
+services:
+  app:
+    build: .
+    image: habitforge-app
+    # This line tells this service to load variables from the .env file
+    env_file:
+      - .env
+    environment:
+      # FIX: Read the password from the variable, don't hard-code it
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/habitforge_db
+      - SECRET_KEY=${SECRET_KEY} 
+      - APP_ENV=${APP_ENV}
+      - CLIENT_ORIGIN=${CLIENT_ORIGIN}
+      - REDIS_URL=redis://redis:6379
+      - DATA_ENCRYPTION_KEY=${DATA_ENCRYPTION_KEY}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    # This line tells this service to load variables from the .env file
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=postgres
+      # FIX: Read the password from the variable
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=habitforge_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

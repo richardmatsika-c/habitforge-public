@@ -1,0 +1,43 @@
+.venv/
+.vscode/
+__pycache__/
+app/__pycache__
+database.db 
+.env
+pytest.ini
+*.py[cod]
+*.so
+.Python
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Database
+database.db
+*.sqlite
+*.sqlite3
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Docker
+postgres_data/
+*.log
+.docker/
+!docker-compose.yml
+!Dockerfile
+
+# IDE
+.vscode/
+.idea/
+.pytest_cache

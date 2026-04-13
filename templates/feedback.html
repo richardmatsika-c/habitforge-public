@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Submit Feedback — HabitForge{% endblock %}
+{% block content %}
+  <main class="form-card">
+    <h1 style="margin-top:0">Submit Feedback</h1>
+
+    {% if info == "success" %}
+      <div class="flash" style="background:rgba(100,255,100,0.1);color:#c2ffc2">
+        Thank you! Your feedback has been submitted.
+      </div>
+    {% endif %}
+
+    <p style="color:var(--muted);font-size:14px;margin-top:0;">
+      Found a bug? Have an idea? Let us know!
+    </p>
+
+    <form method="post" action="/web/feedback" novalidate>
+      <label for="message" style="display:block;margin-top:8px;color:var(--muted)">Your Feedback</label>
+      <textarea id="message" name="message" required 
+             placeholder="I was on the dashboard and..."
+             rows="5"
+             style="width:100%;padding:10px;border-radius:8px;margin-top:6px;box-sizing:border-box;background:var(--card);color:inherit;border:1px solid rgba(255,255,255,0.1)"></textarea>
+
+      <label for="page" style="display:block;margin-top:8px;color:var(--muted)">Which page is this about? (Optional)</label>
+      <input id="page" name="page" type="text" 
+             placeholder="e.g., Dashboard, Login"
+             style="width:100%;padding:10px;border-radius:8px;margin-top:6px;box-sizing:border-box;">
+
+      <div style="margin-top:12px">
+        <button type="submit" class="btn">Submit</button>
+      </div>
+    </form>
+  </main>
+{% endblock %}
